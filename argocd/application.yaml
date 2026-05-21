@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/YOUR_ORG/YOUR_REPO.git
     targetRevision: main
-    path: k8s/overlays/prod
+    path: k8s/overlays/k3s
   destination:
     server: https://kubernetes.default.svc
     namespace: chatbot

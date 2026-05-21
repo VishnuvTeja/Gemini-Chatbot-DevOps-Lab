@@ -4,8 +4,10 @@ metadata:
   name: chatbot
   namespace: chatbot
 spec:
+  ingressClassName: traefik
   rules:
-    - http:
+    - host: chatbot.local
+      http:
         paths:
           - path: /
             pathType: Prefix

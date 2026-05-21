@@ -3,11 +3,11 @@ kind: Kustomization
 resources:
   - ../../base
 patches:
-  - path: ingress-alb.yaml
+  - path: ingress-traefik.yaml
 images:
   - name: replace-me-backend
-    newName: 123456789012.dkr.ecr.us-east-1.amazonaws.com/chatbot-backend
+    newName: ghcr.io/YOUR_GITHUB_OWNER/chatbot-backend
     newTag: latest
   - name: replace-me-frontend
-    newName: 123456789012.dkr.ecr.us-east-1.amazonaws.com/chatbot-frontend
+    newName: ghcr.io/YOUR_GITHUB_OWNER/chatbot-frontend
     newTag: latest

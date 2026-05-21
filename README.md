@@ -1,6 +1,6 @@
 # Gemini Chatbot DevOps Lab
 
-A full-stack chatbot project built for learning CI/CD from local development to EKS.
+A full-stack chatbot project built for learning CI/CD from local development to K3s.
 
 ## Stack
 
@@ -9,10 +9,10 @@ A full-stack chatbot project built for learning CI/CD from local development to 
 | Frontend | React + Vite |
 | Backend | FastAPI |
 | AI | Gemini API |
-| Infra | Terraform |
+| Infra | K3s on a VM or local lab machine |
 | CI/CD | GitHub Actions and GitLab CI |
-| Registry | Amazon ECR |
-| Kubernetes | Amazon EKS |
+| Registry | GitHub Container Registry or GitLab Container Registry |
+| Kubernetes | K3s |
 | GitOps | ArgoCD |
 | Monitoring | Prometheus + Grafana |
 | Logging | Loki |
@@ -52,9 +52,9 @@ npm run dev
 
 1. Run locally with Docker Compose.
 2. Push code to GitHub or GitLab.
-3. CI runs tests, builds images, scans with Trivy, and pushes to ECR.
-4. Update Kubernetes image tags under `k8s/overlays/prod`.
-5. ArgoCD syncs manifests into EKS.
+3. CI runs tests, builds images, scans with Trivy, and pushes to GHCR or GitLab Registry.
+4. Update Kubernetes image tags under `k8s/overlays/k3s`.
+5. ArgoCD syncs manifests into K3s.
 6. Prometheus scrapes `/metrics`; Grafana visualizes backend traffic.
 7. Loki collects container logs.
 
@@ -62,8 +62,9 @@ npm run dev
 
 - `backend/` FastAPI API, Gemini integration, tests, Dockerfile.
 - `frontend/` React chatbot UI, Dockerfile, Nginx config.
-- `k8s/` Kustomize base and production overlay.
-- `terraform/` AWS ECR + EKS infrastructure.
+- `k8s/` Kustomize base, K3s overlay, and optional AWS production overlay.
+- `docs/k3s-production-route.md` K3s-first deployment guide.
+- `terraform/` Optional AWS ECR + EKS reference infrastructure.
 - `argocd/` ArgoCD application manifest.
 - `.github/workflows/` GitHub Actions pipeline.
 - `.gitlab-ci.yml` GitLab pipeline.

@@ -7,9 +7,9 @@ on:
     branches: ["main"]
 
 env:
-  AWS_REGION: us-east-1
-  BACKEND_REPOSITORY: chatbot-backend
-  FRONTEND_REPOSITORY: chatbot-frontend
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ${{ github.repository_owner }}/chatbot-backend
+  FRONTEND_IMAGE: ${{ github.repository_owner }}/chatbot-frontend
 
 jobs:
   test:
@@ -43,19 +43,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
-          aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-
-      - name: Login to ECR
-        id: ecr
-        uses: aws-actions/amazon-ecr-login@v2
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build images
         run: |
@@ -70,14 +67,25 @@ jobs:
           exit-code: "1"
           severity: CRITICAL,HIGH
 
+      - name: Trivy scan frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: frontend:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+
       - name: Push images
         run: |
-          REGISTRY=${{ steps.ecr.outputs.registry }}
-          docker tag backend:${GITHUB_SHA} $REGISTRY/${BACKEND_REPOSITORY}:${GITHUB_SHA}
-          docker tag frontend:${GITHUB_SHA} $REGISTRY/${FRONTEND_REPOSITORY}:${GITHUB_SHA}
-          docker push $REGISTRY/${BACKEND_REPOSITORY}:${GITHUB_SHA}
-          docker push $REGISTRY/${FRONTEND_REPOSITORY}:${GITHUB_SHA}
+          docker tag backend:${GITHUB_SHA} $REGISTRY/$BACKEND_IMAGE:${GITHUB_SHA}
+          docker tag frontend:${GITHUB_SHA} $REGISTRY/$FRONTEND_IMAGE:${GITHUB_SHA}
+          docker tag backend:${GITHUB_SHA} $REGISTRY/$BACKEND_IMAGE:latest
+          docker tag frontend:${GITHUB_SHA} $REGISTRY/$FRONTEND_IMAGE:latest
+          docker push $REGISTRY/$BACKEND_IMAGE:${GITHUB_SHA}
+          docker push $REGISTRY/$FRONTEND_IMAGE:${GITHUB_SHA}
+          docker push $REGISTRY/$BACKEND_IMAGE:latest
+          docker push $REGISTRY/$FRONTEND_IMAGE:latest
 
       - name: Next GitOps step
         run: |
-          echo "Update k8s/overlays/prod/kustomization.yaml image tags to ${GITHUB_SHA}, then ArgoCD will sync."
+          echo "Update k8s/overlays/k3s/kustomization.yaml image tags to ${GITHUB_SHA}, then ArgoCD will sync."
