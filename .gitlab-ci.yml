@@ -1,0 +1,62 @@
+stages:
+  - test
+  - build
+  - scan
+  - push
+
+variables:
+  AWS_REGION: "us-east-1"
+  BACKEND_REPOSITORY: "chatbot-backend"
+  FRONTEND_REPOSITORY: "chatbot-frontend"
+  DOCKER_TLS_CERTDIR: ""
+
+backend_test:
+  stage: test
+  image: python:3.12-slim
+  script:
+    - cd backend
+    - pip install -r requirements.txt
+    - GEMINI_API_KEY=test-key pytest
+
+frontend_build:
+  stage: test
+  image: node:22-alpine
+  script:
+    - cd frontend
+    - npm install
+    - npm run build
+
+docker_build:
+  stage: build
+  image: docker:27
+  services:
+    - docker:27-dind
+  script:
+    - docker build -t backend:$CI_COMMIT_SHA backend
+    - docker build -t frontend:$CI_COMMIT_SHA frontend
+
+trivy_scan:
+  stage: scan
+  image: aquasec/trivy:latest
+  services:
+    - docker:27-dind
+  script:
+    - trivy fs --exit-code 1 --severity HIGH,CRITICAL .
+
+ecr_push:
+  stage: push
+  image: docker:27
+  services:
+    - docker:27-dind
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  before_script:
+    - apk add --no-cache aws-cli
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+  script:
+    - docker build -t backend:$CI_COMMIT_SHA backend
+    - docker build -t frontend:$CI_COMMIT_SHA frontend
+    - docker tag backend:$CI_COMMIT_SHA $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPOSITORY:$CI_COMMIT_SHA
+    - docker tag frontend:$CI_COMMIT_SHA $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPOSITORY:$CI_COMMIT_SHA
+    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPOSITORY:$CI_COMMIT_SHA
+    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPOSITORY:$CI_COMMIT_SHA

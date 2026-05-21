@@ -1,0 +1,80 @@
+# Gemini Chatbot DevOps Lab
+
+A full-stack chatbot project built for learning CI/CD from local development to EKS.
+
+## Stack
+
+| Layer | Technology |
+| --- | --- |
+| Frontend | React + Vite |
+| Backend | FastAPI |
+| AI | Gemini API |
+| Infra | Terraform |
+| CI/CD | GitHub Actions and GitLab CI |
+| Registry | Amazon ECR |
+| Kubernetes | Amazon EKS |
+| GitOps | ArgoCD |
+| Monitoring | Prometheus + Grafana |
+| Logging | Loki |
+| Security | Trivy |
+
+## Local Run
+
+Your existing `.env` can stay at the repo root. It should include `GEMINI_API_KEY`.
+
+```powershell
+docker compose up --build
+```
+
+Open:
+
+- Frontend: http://localhost:5173
+- Backend health: http://localhost:8000/health
+- Backend metrics: http://localhost:8000/metrics
+
+Without Docker:
+
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+## CI/CD Learning Flow
+
+1. Run locally with Docker Compose.
+2. Push code to GitHub or GitLab.
+3. CI runs tests, builds images, scans with Trivy, and pushes to ECR.
+4. Update Kubernetes image tags under `k8s/overlays/prod`.
+5. ArgoCD syncs manifests into EKS.
+6. Prometheus scrapes `/metrics`; Grafana visualizes backend traffic.
+7. Loki collects container logs.
+
+## Repo Map
+
+- `backend/` FastAPI API, Gemini integration, tests, Dockerfile.
+- `frontend/` React chatbot UI, Dockerfile, Nginx config.
+- `k8s/` Kustomize base and production overlay.
+- `terraform/` AWS ECR + EKS infrastructure.
+- `argocd/` ArgoCD application manifest.
+- `.github/workflows/` GitHub Actions pipeline.
+- `.gitlab-ci.yml` GitLab pipeline.
+- `monitoring/` Helm values for kube-prometheus-stack and Loki.
+
+## Secret Handling
+
+Never commit `.env`. In Kubernetes, create the Gemini secret:
+
+```powershell
+kubectl create secret generic chatbot-secrets --from-literal=GEMINI_API_KEY="your-key" -n chatbot
+```
+
+For CI, store credentials in repository secrets or CI variables.
