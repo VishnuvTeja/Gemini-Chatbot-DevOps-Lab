@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-backend
+  namespace: chatbot
+  labels:
+    app: chatbot-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chatbot-backend
+  template:
+    metadata:
+      labels:
+        app: chatbot-backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8000"
+    spec:
+      containers:
+        - name: backend
+          image: replace-me-backend
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: chatbot-secrets
+                  key: GEMINI_API_KEY
+            - name: GEMINI_MODEL
+              value: gemini-1.5-flash
+            - name: BACKEND_CORS_ORIGINS
+              value: "*"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 160Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot-backend
+  namespace: chatbot
+  labels:
+    app: chatbot-backend
+spec:
+  selector:
+    app: chatbot-backend
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

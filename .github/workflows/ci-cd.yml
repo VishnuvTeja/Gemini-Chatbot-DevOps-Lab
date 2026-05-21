@@ -1,0 +1,83 @@
+name: CI/CD
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  AWS_REGION: us-east-1
+  BACKEND_REPOSITORY: chatbot-backend
+  FRONTEND_REPOSITORY: chatbot-frontend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Backend tests
+        working-directory: backend
+        run: |
+          pip install -r requirements.txt
+          GEMINI_API_KEY=test-key pytest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Frontend build
+        working-directory: frontend
+        run: |
+          npm install
+          npm run build
+
+  build-scan-push:
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build images
+        run: |
+          docker build -t backend:${GITHUB_SHA} backend
+          docker build -t frontend:${GITHUB_SHA} frontend
+
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: backend:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+
+      - name: Push images
+        run: |
+          REGISTRY=${{ steps.ecr.outputs.registry }}
+          docker tag backend:${GITHUB_SHA} $REGISTRY/${BACKEND_REPOSITORY}:${GITHUB_SHA}
+          docker tag frontend:${GITHUB_SHA} $REGISTRY/${FRONTEND_REPOSITORY}:${GITHUB_SHA}
+          docker push $REGISTRY/${BACKEND_REPOSITORY}:${GITHUB_SHA}
+          docker push $REGISTRY/${FRONTEND_REPOSITORY}:${GITHUB_SHA}
+
+      - name: Next GitOps step
+        run: |
+          echo "Update k8s/overlays/prod/kustomization.yaml image tags to ${GITHUB_SHA}, then ArgoCD will sync."
