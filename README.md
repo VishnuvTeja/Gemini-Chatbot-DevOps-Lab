@@ -11,7 +11,7 @@ A full-stack chatbot project built for learning CI/CD from local development to 
 | AI | Gemini API |
 | Infra | K3s on a VM or local lab machine |
 | CI/CD | GitHub Actions and GitLab CI |
-| Registry | GitHub Container Registry or GitLab Container Registry |
+| Registry | GitHub Container Registry |
 | Kubernetes | K3s |
 | GitOps | ArgoCD |
 | Monitoring | Prometheus + Grafana |
@@ -52,7 +52,7 @@ npm run dev
 
 1. Run locally with Docker Compose.
 2. Push code to GitHub or GitLab.
-3. CI runs tests, builds images, scans with Trivy, and pushes to GHCR or GitLab Registry.
+3. CI runs tests, builds images, scans with Trivy, and pushes to GHCR.
 4. Update Kubernetes image tags under `k8s/overlays/k3s`.
 5. ArgoCD syncs manifests into K3s.
 6. Prometheus scrapes `/metrics`; Grafana visualizes backend traffic.
@@ -62,9 +62,10 @@ npm run dev
 
 - `backend/` FastAPI API, Gemini integration, tests, Dockerfile.
 - `frontend/` React chatbot UI, Dockerfile, Nginx config.
-- `k8s/` Kustomize base, K3s overlay, and optional AWS production overlay.
+- `k8s/` Kustomize base and K3s overlay.
 - `docs/k3s-production-route.md` K3s-first deployment guide.
-- `terraform/` Optional AWS ECR + EKS reference infrastructure.
+- `docs/argocd-k3s-flow.md` ArgoCD and K3s GitOps flow.
+- `terraform/` Optional AWS reference infrastructure; not needed for the current K3s route.
 - `argocd/` ArgoCD application manifest.
 - `.github/workflows/` GitHub Actions pipeline.
 - `.gitlab-ci.yml` GitLab pipeline.
@@ -75,7 +76,9 @@ npm run dev
 Never commit `.env`. In Kubernetes, create the Gemini secret:
 
 ```powershell
-kubectl create secret generic chatbot-secrets --from-literal=GEMINI_API_KEY="your-key" -n chatbot
+kubectl apply -f k8s/base/namespace.yaml
+kubectl create secret generic gemini-secret --from-literal=GEMINI_API_KEY="your-key" -n chatbot
+kubectl create secret docker-registry ghcr-creds --docker-server=ghcr.io --docker-username="your-user" --docker-password="your-token" -n chatbot
 ```
 
 For CI, store credentials in repository secrets or CI variables.

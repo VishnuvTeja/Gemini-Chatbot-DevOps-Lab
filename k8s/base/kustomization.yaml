@@ -4,4 +4,3 @@ resources:
   - namespace.yaml
   - backend.yaml
   - frontend.yaml
-  - ingress.yaml

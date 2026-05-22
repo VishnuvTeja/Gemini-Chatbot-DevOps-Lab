@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Bot, Send, ShieldCheck, Workflow } from "lucide-react";
 import "./styles.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 function App() {
   const [messages, setMessages] = useState([
@@ -83,7 +83,7 @@ function App() {
         <header className="chat-header">
           <div>
             <h2>Chat</h2>
-            <p>Backend: {API_BASE_URL}</p>
+            <p>Backend: {API_BASE_URL || "same origin"}</p>
           </div>
           <span className={isSending ? "status busy" : "status"}>{isSending ? "Thinking" : "Ready"}</span>
         </header>

@@ -65,24 +65,26 @@ For the full setup, use `docs/k3s-production-route.md`.
 
 ## 6. Push Images To A Registry
 
-Goal: store deployable images in GHCR or GitLab Registry.
+Goal: store deployable images in GHCR.
 
 ```powershell
 docker login ghcr.io
-docker tag chatbot-backend:local ghcr.io/YOUR_GITHUB_OWNER/chatbot-backend:v1
-docker tag chatbot-frontend:local ghcr.io/YOUR_GITHUB_OWNER/chatbot-frontend:v1
-docker push ghcr.io/YOUR_GITHUB_OWNER/chatbot-backend:v1
-docker push ghcr.io/YOUR_GITHUB_OWNER/chatbot-frontend:v1
+docker tag chatbot-backend:local ghcr.io/vishnuvteja/chatbot-backend:v2
+docker tag chatbot-frontend:local ghcr.io/vishnuvteja/chatbot-frontend:v2
+docker push ghcr.io/vishnuvteja/chatbot-backend:v2
+docker push ghcr.io/vishnuvteja/chatbot-frontend:v2
 ```
 
-Update `k8s/overlays/k3s/kustomization.yaml` with the real owner and tag.
+Update `k8s/overlays/k3s/kustomization.yaml` when the image tag changes.
 
 ## 7. Kubernetes Deploy
 
 Goal: run manually before adding GitOps.
 
 ```powershell
-kubectl create secret generic chatbot-secrets --from-literal=GEMINI_API_KEY="your-key" -n chatbot --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -f k8s/base/namespace.yaml
+kubectl create secret generic gemini-secret --from-literal=GEMINI_API_KEY="your-key" -n chatbot --dry-run=client -o yaml | kubectl apply -f -
+kubectl create secret docker-registry ghcr-creds --docker-server=ghcr.io --docker-username="your-user" --docker-password="your-token" -n chatbot --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -k k8s/overlays/k3s
 kubectl get pods -n chatbot
 ```
@@ -122,4 +124,5 @@ For GitHub:
 For GitLab:
 
 - Push to `main`.
-- The pipeline tests, builds, scans, and pushes images to GitLab Container Registry.
+- Set `GHCR_USER` and `GHCR_TOKEN` as GitLab CI/CD variables.
+- The pipeline tests, builds, scans, and pushes images to GHCR.
