@@ -23,7 +23,7 @@ spec:
         - name: ghcr-creds
       containers:
         - name: backend
-          image: replace-me-backend
+          image: ghcr.io/vishnuvteja/chatbot-backend:v2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
@@ -34,7 +34,7 @@ spec:
                   name: gemini-secret
                   key: GEMINI_API_KEY
             - name: GEMINI_MODEL
-              value: gemini-1.5-flash
+              value: gemini-3.5-flash
             - name: BACKEND_CORS_ORIGINS
               value: "*"
           readinessProbe:
