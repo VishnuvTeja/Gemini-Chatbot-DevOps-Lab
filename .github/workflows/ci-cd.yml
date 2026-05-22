@@ -8,8 +8,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ${{ github.repository_owner }}/chatbot-backend
-  FRONTEND_IMAGE: ${{ github.repository_owner }}/chatbot-frontend
 
 jobs:
   test:
@@ -23,7 +21,6 @@ jobs:
 
       - name: Backend tests
         working-directory: backend
-        # Injects the current working directory to fix the ModuleNotFoundError
         env:
           PYTHONPATH: .
         run: |
@@ -50,6 +47,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # --- THIS IS THE FIX: Convert repository path to lowercase ---
+      - name: Set lower-case environment variables
+        run: |
+          echo "BACKEND_IMAGE=$(echo "${{ github.repository_owner }}/chatbot-backend" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "FRONTEND_IMAGE=$(echo "${{ github.repository_owner }}/chatbot-frontend" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -67,7 +70,7 @@ jobs:
         with:
           image-ref: backend:${{ github.sha }}
           format: table
-          exit-code: "0"
+          exit-code: "0"  
           severity: CRITICAL,HIGH
 
       - name: Trivy scan frontend
