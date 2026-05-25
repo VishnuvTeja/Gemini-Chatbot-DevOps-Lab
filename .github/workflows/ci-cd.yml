@@ -12,6 +12,8 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
+  BACKEND_IMAGE: ${{ github.repository_owner }}/chatbot-backend
+  FRONTEND_IMAGE: ${{ github.repository_owner }}/chatbot-frontend
 
 jobs:
   test:
@@ -71,7 +73,7 @@ jobs:
         with:
           image-ref: backend:${{ github.sha }}
           format: table
-          exit-code: "0"  
+          exit-code: "1"
           severity: CRITICAL,HIGH
 
       - name: Trivy scan frontend
@@ -79,7 +81,7 @@ jobs:
         with:
           image-ref: frontend:${{ github.sha }}
           format: table
-          exit-code: "0"
+          exit-code: "1"
           severity: CRITICAL,HIGH
 
       - name: Push images
