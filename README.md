@@ -81,3 +81,16 @@ kubectl create secret docker-registry ghcr-creds --docker-server=ghcr.io --docke
 ```
 
 For CI, store credentials in repository secrets or CI variables.
+
+App Snapshots:
+![alt text](image-4.png)
+
+argocd snaps:
+![alt text](image-5.png)
+
+monitoring dashbords :
+https://snapshots.raintank.io/dashboard/snapshot/ju42qsaKEO5L1zuFlediICu6Sk6LpIyD
+![alt text](image.png)
+![alt text](image-1.png)
+![alt text](image-2.png)
+![alt text](image-3.png)
