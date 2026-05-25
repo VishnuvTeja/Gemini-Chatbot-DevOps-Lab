@@ -10,7 +10,7 @@ A full-stack chatbot project built for learning CI/CD from local development to 
 | Backend | FastAPI |
 | AI | Gemini API |
 | Infra | K3s on a VM or local lab machine |
-| CI/CD | GitHub Actions and GitLab CI |
+| CI/CD | GitHub Actions |
 | Registry | GitHub Container Registry |
 | Kubernetes | K3s |
 | GitOps | ArgoCD |
@@ -51,7 +51,7 @@ npm run dev
 ## CI/CD Learning Flow
 
 1. Run locally with Docker Compose.
-2. Push code to GitHub or GitLab.
+2. Push code to GitHub.
 3. CI runs tests, builds images, scans with Trivy, and pushes to GHCR.
 4. Update Kubernetes image tags under `k8s/overlays/k3s`.
 5. ArgoCD syncs manifests into K3s.
@@ -68,7 +68,6 @@ npm run dev
 - `terraform/` Optional AWS reference infrastructure; not needed for the current K3s route.
 - `argocd/` ArgoCD application manifest.
 - `.github/workflows/` GitHub Actions pipeline.
-- `.gitlab-ci.yml` GitLab pipeline.
 - `monitoring/` Helm values for kube-prometheus-stack and Loki.
 
 ## Secret Handling

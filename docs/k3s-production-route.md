@@ -142,7 +142,7 @@ helm upgrade --install loki grafana/loki-stack \
 
 The K3s route uses this deployment flow:
 
-1. Push code to GitHub or GitLab.
+1. Push code to GitHub.
 2. CI runs backend tests and frontend build.
 3. CI builds Docker images.
 4. Trivy scans the repo and images.

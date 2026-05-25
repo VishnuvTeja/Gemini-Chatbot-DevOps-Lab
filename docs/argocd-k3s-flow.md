@@ -6,7 +6,7 @@ This is the GitOps flow for the chatbot running on K3s inside your EC2 instance.
 
 ```text
 Developer push
-  -> GitHub/GitLab CI
+  -> GitHub CI
   -> Build backend and frontend Docker images
   -> Scan with Trivy
   -> Push images to GHCR

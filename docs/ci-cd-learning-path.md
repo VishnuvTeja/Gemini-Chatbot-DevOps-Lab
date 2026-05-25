@@ -120,9 +120,3 @@ For GitHub:
 
 - Push to `main`.
 - The workflow tests, builds, scans, and pushes images to GHCR.
-
-For GitLab:
-
-- Push to `main`.
-- Set `GHCR_USER` and `GHCR_TOKEN` as GitLab CI/CD variables.
-- The pipeline tests, builds, scans, and pushes images to GHCR.
