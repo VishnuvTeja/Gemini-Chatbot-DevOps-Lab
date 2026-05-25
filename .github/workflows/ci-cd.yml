@@ -92,3 +92,15 @@ jobs:
       - name: Next GitOps step
         run: |
           echo "Update k8s/overlays/k3s/kustomization.yaml image tags to ${{ github.sha }}, then ArgoCD will sync."
+          
+      - name: Update image tags for ArgoCD
+        run: |
+          sed -i "s|newTag: .*|newTag: ${{ github.sha }}|g" k8s/overlays/k3s/kustomization.yaml
+
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+          git add k8s/overlays/k3s/kustomization.yaml
+          git commit -m "Update image tag to ${{ github.sha }}"
+          git push
+      
