@@ -1,5 +1,5 @@
 services:
-  backend:
+  chatbot-backend:
     build:
       context: ./backend
     env_file:
@@ -22,5 +22,5 @@ services:
     ports:
       - "5173:80"
     depends_on:
-      backend:
+      chatbot-backend:
         condition: service_healthy

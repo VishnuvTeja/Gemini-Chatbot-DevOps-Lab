@@ -23,7 +23,7 @@ spec:
         - name: ghcr-creds
       containers:
         - name: backend
-          image: ghcr.io/vishnuvteja/chatbot-backend:v2
+          image: ghcr.io/vishnuvteja/chatbot-backend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
