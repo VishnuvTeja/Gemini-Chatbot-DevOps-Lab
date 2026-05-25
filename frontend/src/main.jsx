@@ -1,6 +1,6 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { Bot, Send, ShieldCheck, Workflow } from "lucide-react";
+import { Bot, Send, ShieldCheck, Workflow, Moon, Sun } from "lucide-react";
 import "./styles.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
@@ -15,7 +15,40 @@ function App() {
   ]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const inputRef = useRef(null);
+
+  // Initialize theme from localStorage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      const isDark = savedTheme === "dark";
+      setIsDarkMode(isDark);
+      applyTheme(isDark);
+    } else {
+      // Check system preference
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setIsDarkMode(prefersDark);
+      applyTheme(prefersDark);
+    }
+  }, []);
+
+  function applyTheme(isDark) {
+    const root = document.documentElement;
+    if (isDark) {
+      root.classList.add("dark-mode");
+      localStorage.setItem("theme", "dark");
+    } else {
+      root.classList.remove("dark-mode");
+      localStorage.setItem("theme", "light");
+    }
+  }
+
+  function toggleTheme() {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    applyTheme(newTheme);
+  }
 
   const canSend = useMemo(() => input.trim().length > 0 && !isSending, [input, isSending]);
 
@@ -85,7 +118,17 @@ function App() {
             <h2>Chat</h2>
             <p>Backend: {API_BASE_URL || "same origin"}</p>
           </div>
-          <span className={isSending ? "status busy" : "status"}>{isSending ? "Thinking" : "Ready"}</span>
+          <div className="header-controls">
+            <button
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+              title={isDarkMode ? "Light Mode" : "Dark Mode"}
+            >
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <span className={isSending ? "status busy" : "status"}>{isSending ? "Thinking" : "Ready"}</span>
+          </div>
         </header>
 
         <div className="messages" aria-live="polite">
