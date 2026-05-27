@@ -47,7 +47,8 @@ html.dark-mode body {
 }
 
 button,
-textarea {
+textarea,
+input {
   font: inherit;
 }
 
@@ -184,7 +185,7 @@ html.dark-mode .status.busy {
   border-color: #6b5a2d;
 }
 
-.theme-toggle {
+.icon-button {
   width: 40px;
   height: 40px;
   border: 1px solid var(--border-color);
@@ -197,21 +198,81 @@ html.dark-mode .status.busy {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
-.theme-toggle:hover {
+.icon-button:hover {
   background: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
 }
 
-html.dark-mode .theme-toggle {
+html.dark-mode .icon-button {
   background: var(--bg-surface);
   border-color: var(--border-color);
 }
 
-html.dark-mode .theme-toggle:hover {
+html.dark-mode .icon-button:hover {
   background: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
+}
+
+.welcome-panel {
+  min-width: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--bg-main);
+}
+
+.welcome-form {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 14px;
+  padding: 26px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-surface-alt);
+}
+
+.welcome-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: var(--primary-color);
+}
+
+.welcome-form p {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.welcome-form label {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.welcome-form input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  outline: none;
+}
+
+.welcome-form input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(217, 79, 48, .15);
+}
+
+.start-button {
+  width: 100%;
+  height: 48px;
 }
 
 .messages {

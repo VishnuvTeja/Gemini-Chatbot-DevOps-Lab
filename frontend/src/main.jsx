@@ -1,24 +1,50 @@
-import React, { useMemo, useRef, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { Bot, Send, ShieldCheck, Workflow, Moon, Sun } from "lucide-react";
+import { Bot, Send, ShieldCheck, Workflow, Moon, Sun, UserRound, RotateCcw } from "lucide-react";
 import "./styles.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const USERNAME_KEY = "chatbot.username";
+const historyKey = (username) => `chatbot.history.${username.trim().toLowerCase()}`;
+
+function greetingFor(username) {
+  return {
+    role: "assistant",
+    content: `Hello ${username}! Welcome back to your Gemini DevOps chatbot. How can I help you today?`,
+  };
+}
+
+function parseHistory(savedHistory, username) {
+  if (!savedHistory) return [greetingFor(username)];
+
+  try {
+    const parsed = JSON.parse(savedHistory);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : [greetingFor(username)];
+  } catch {
+    return [greetingFor(username)];
+  }
+}
 
 function App() {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Hi! I am your Gemini chatbot. Ask me a DevOps, cloud, Kubernetes, or CI/CD question.",
-    },
-  ]);
+  const [username, setUsername] = useState("");
+  const [nameInput, setNameInput] = useState("");
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const inputRef = useRef(null);
 
-  // Initialize theme from localStorage
+  const loadUser = useCallback((nextUsername) => {
+    const cleanName = nextUsername.trim();
+    if (!cleanName) return;
+
+    const savedHistory = localStorage.getItem(historyKey(cleanName));
+    setUsername(cleanName);
+    setNameInput(cleanName);
+    setMessages(parseHistory(savedHistory, cleanName));
+    localStorage.setItem(USERNAME_KEY, cleanName);
+  }, []);
+
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
@@ -31,7 +57,16 @@ function App() {
       setIsDarkMode(prefersDark);
       applyTheme(prefersDark);
     }
-  }, []);
+    const savedUsername = localStorage.getItem(USERNAME_KEY) ?? "";
+    if (savedUsername) {
+      loadUser(savedUsername);
+    }
+  }, [loadUser]);
+
+  useEffect(() => {
+    if (!username || messages.length === 0) return;
+    localStorage.setItem(historyKey(username), JSON.stringify(messages));
+  }, [messages, username]);
 
   function applyTheme(isDark) {
     const root = document.documentElement;
@@ -48,6 +83,25 @@ function App() {
     const newTheme = !isDarkMode;
     setIsDarkMode(newTheme);
     applyTheme(newTheme);
+  }
+
+  function startChat(event) {
+    event.preventDefault();
+    loadUser(nameInput);
+  }
+
+  function clearHistory() {
+    if (!username) return;
+    const nextMessages = [greetingFor(username)];
+    localStorage.removeItem(historyKey(username));
+    setMessages(nextMessages);
+  }
+
+  function changeUser() {
+    localStorage.removeItem(USERNAME_KEY);
+    setUsername("");
+    setNameInput("");
+    setInput("");
   }
 
   const canSend = useMemo(() => input.trim().length > 0 && !isSending, [input, isSending]);
@@ -112,53 +166,93 @@ function App() {
         </div>
       </aside>
 
-      <section className="chat-panel">
-        <header className="chat-header">
-          <div>
-            <h2>Chat</h2>
-            <p>Backend: {API_BASE_URL || "same origin"}</p>
-          </div>
-          <div className="header-controls">
-            <button
-              className="theme-toggle"
-              onClick={toggleTheme}
-              aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-              title={isDarkMode ? "Light Mode" : "Dark Mode"}
-            >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+      {!username ? (
+        <section className="welcome-panel">
+          <form className="welcome-form" onSubmit={startChat}>
+            <div className="welcome-icon">
+              <UserRound size={28} />
+            </div>
+            <h2>Welcome</h2>
+            <p>Enter your name to start a saved chatbot session.</p>
+            <label htmlFor="username">Name</label>
+            <input
+              id="username"
+              value={nameInput}
+              maxLength={40}
+              onChange={(event) => setNameInput(event.target.value)}
+              placeholder="Vishnu"
+              autoFocus
+            />
+            <button className="start-button" type="submit" disabled={!nameInput.trim()}>
+              Start chat
             </button>
-            <span className={isSending ? "status busy" : "status"}>{isSending ? "Thinking" : "Ready"}</span>
+          </form>
+        </section>
+      ) : (
+        <section className="chat-panel">
+          <header className="chat-header">
+            <div>
+              <h2>Chat with {username}</h2>
+              <p>{messages.length} saved messages - Backend: {API_BASE_URL || "same origin"}</p>
+            </div>
+            <div className="header-controls">
+              <button
+                className="icon-button"
+                onClick={changeUser}
+                aria-label="Change user"
+                title="Change user"
+              >
+                <UserRound size={19} />
+              </button>
+              <button
+                className="icon-button"
+                onClick={clearHistory}
+                aria-label="Clear chat history"
+                title="Clear history"
+              >
+                <RotateCcw size={19} />
+              </button>
+              <button
+                className="icon-button"
+                onClick={toggleTheme}
+                aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+                title={isDarkMode ? "Light Mode" : "Dark Mode"}
+              >
+                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+              <span className={isSending ? "status busy" : "status"}>{isSending ? "Thinking" : "Ready"}</span>
+            </div>
+          </header>
+
+          <div className="messages" aria-live="polite">
+            {messages.map((message, index) => (
+              <article className={`message ${message.role}`} key={`${message.role}-${index}`}>
+                {message.content}
+              </article>
+            ))}
+            {isSending && <article className="message assistant muted">Thinking...</article>}
           </div>
-        </header>
 
-        <div className="messages" aria-live="polite">
-          {messages.map((message, index) => (
-            <article className={`message ${message.role}`} key={`${message.role}-${index}`}>
-              {message.content}
-            </article>
-          ))}
-          {isSending && <article className="message assistant muted">Thinking...</article>}
-        </div>
-
-        <form className="composer" onSubmit={sendMessage}>
-          <textarea
-            ref={inputRef}
-            value={input}
-            rows={1}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage(event);
-              }
-            }}
-            placeholder="Ask about Docker, CI/CD, EKS, ArgoCD..."
-          />
-          <button type="submit" disabled={!canSend} aria-label="Send message">
-            <Send size={19} />
-          </button>
-        </form>
-      </section>
+          <form className="composer" onSubmit={sendMessage}>
+            <textarea
+              ref={inputRef}
+              value={input}
+              rows={1}
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  sendMessage(event);
+                }
+              }}
+              placeholder="Ask about Docker, CI/CD, EKS, ArgoCD..."
+            />
+            <button type="submit" disabled={!canSend} aria-label="Send message">
+              <Send size={19} />
+            </button>
+          </form>
+        </section>
+      )}
     </main>
   );
 }
