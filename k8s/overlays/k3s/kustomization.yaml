@@ -5,7 +5,7 @@ resources:
 images:
   - name: chatbot-backend
     newName: ghcr.io/vishnuvteja/chatbot-backend
-    newTag: 21a3f946fbf70d20eadfa15d26a299f5967732e5
+    newTag: cbae10999c0b630c3710fe6fd3908d0dd93f4134
   - name: chatbot-frontend
     newName: ghcr.io/vishnuvteja/chatbot-frontend
-    newTag: 21a3f946fbf70d20eadfa15d26a299f5967732e5
+    newTag: cbae10999c0b630c3710fe6fd3908d0dd93f4134
